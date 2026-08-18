@@ -25,3 +25,19 @@
 - **5. Outcome / Fix:** Received expected `400` status with `"Missing X-Signature header"`.
 
 ---
+
+### Entry #3 — Signature Validation Verification
+
+- **1. Goal / Action:** Validate handling of incorrect webhook signatures.
+- **2. Error Message / Behavior:** Tested request with `-H "X-Signature: fake_signature_123"`.
+- **3. Initial Hypothesis:** Server should reject invalid HMAC-SHA256 digests with a `401 Unauthorized`.
+- **4. What I Tried:** Sent POST request with custom header via cURL.
+- **5. Outcome / Fix:** Server correctly returned `401` status with `"Invalid signature!"`.
+
+---
+
+## Summary of Autonomous Learning
+
+- **Total Time Spent:** ~1.5 Hours
+- **Primary Documentation Used:** Python `hmac` & `hashlib` documentation, Flask request processing guide.
+- **Key Takeaway:** HMAC verification requires comparing raw request bytes against a computed SHA256 digest using a shared secret key.
