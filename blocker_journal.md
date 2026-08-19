@@ -34,6 +34,19 @@
 - **4. What I Tried:** Sent POST request with custom header via cURL.
 - **5. Outcome / Fix:** Server correctly returned `401` status with `"Invalid signature!"`.
 
+## Day 3: Individual Refactoring & Retrospective
+
+### Trade-Off Decisions
+
+- **Verification vs. Complexity:** Focused on solidifying single-file HMAC-SHA256 request verification using Flask over complex multi-file modules to maintain lightweight, readable code for rapid testing.
+- **Shell Formatting Handling:** Worked around Windows `cmd` quote-escaping differences during payload testing by using raw string payload hashes directly for HMAC validation.
+
+### Self-Retrospective
+
+- **Start:** Testing API endpoints using direct header signatures and automated post-processing scripts to avoid manual hashing errors.
+- **Stop:** Troubleshooting Windows CMD quote escaping manually without verifying raw incoming request bytes in Flask first.
+- **Continue:** Keeping real-time terminal output logs inside `blocker_journal.md` to document verification evidence clearly.
+
 ---
 
 ## Summary of Autonomous Learning
