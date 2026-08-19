@@ -16,10 +16,12 @@ def verify_payment_webhook():
 
     # 2. Compute HMAC-SHA256 signature using secret key and request body
     computed_signature = hmac.new(
-        SECRET_KEY, 
-        request.data, 
+        SECRET_KEY,
+        request.data,
         hashlib.sha256
     ).hexdigest()
+
+    # Print computed hash for testing
 
     # 3. Compare computed hash with header string
     if hmac.compare_digest(computed_signature, provided_signature):
