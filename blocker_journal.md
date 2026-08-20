@@ -47,10 +47,27 @@
 - **Stop:** Troubleshooting Windows CMD quote escaping manually without verifying raw incoming request bytes in Flask first.
 - **Continue:** Keeping real-time terminal output logs inside `blocker_journal.md` to document verification evidence clearly.
 
+## Day 4 Pivot: Solstice Events Co. Asynchronous Re-architecture
+
+### Architectural Shift
+
+- **Pre-Pivot Model:** Synchronous REST calls to badge printer vendor[span_1](start_span)[span_1](end_span).
+- **Post-Pivot Model:** Asynchronous event-driven queue with HMAC-SHA256 verified webhook callback[span_2](start_span)[span_2](end_span).
+
+### Deprecation Strategy
+
+- Marked pre-pivot synchronous endpoints (`/webhook/payment`) with explicit deprecation docstrings and configured them to return `HTTP 410 Gone` to prevent accidental parallel execution[span_3](start_span)[span_3](end_span).
+
+### Verification & Test Results
+
+- **Attendee Check-in (`202 Accepted`):** Scanned attendee transitions immediately to `Pending` state while print job is pushed to message queue[span_4](start_span)[span_4](end_span).
+- **Webhook Callback (`200 OK`):** Background worker signs payload with HMAC-SHA256 and calls `/webhook/print-complete` to update state to `Checked In`[span_5](start_span)[span_5](end_span).
+- **Duplicate Protection (`400 Bad Request`):** Re-scanning `pending` or `checked_in` attendees blocks second print job creation[span_6](start_span)[span_6](end_span).
+
 ---
 
 ## Summary of Autonomous Learning
 
-- **Total Time Spent:** ~1.5 Hours
-- **Primary Documentation Used:** Python `hmac` & `hashlib` documentation, Flask request processing guide.
-- **Key Takeaway:** HMAC verification requires comparing raw request bytes against a computed SHA256 digest using a shared secret key.
+- **Total Time Spent:** ~3.5 Hours
+- **Primary Documentation Used:** Python `hmac`, `hashlib`, `urllib.request` documentation, Flask request processing guide, and asynchronous threading patterns.
+- **Key Takeaway:** Pivoting from synchronous API calls to an asynchronous, event-driven model requires decoupling status tracking (using `Pending` states) and validating background callbacks via signature verification to prevent duplicate requests[span_7](start_span)[span_7](end_span).
