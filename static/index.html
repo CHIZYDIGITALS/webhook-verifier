@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solstice Events - Badge Kiosk</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="kiosk-container">
+      <header>
+        <h1>SOLSTICE EVENTS CO.</h1>
+        <p>Self-Service Badge Check-In Kiosk</p>
+      </header>
+
+      <div id="alert-banner" class="alert-banner hidden"></div>
+
+      <main class="attendees-grid">
+        <div class="card" id="card-ATT_001">
+          <h3>Alice Johnson</h3>
+          <p class="id-tag">ID: ATT_001</p>
+          <div class="status-badge status-not_checked_in" id="badge-ATT_001">
+            Not Checked In
+          </div>
+          <button onclick="scanBadge('ATT_001')" id="btn-ATT_001">
+            Simulate Scan
+          </button>
+        </div>
+
+        <div class="card" id="card-ATT_002">
+          <h3>Bob Smith</h3>
+          <p class="id-tag">ID: ATT_002</p>
+          <div class="status-badge status-not_checked_in" id="badge-ATT_002">
+            Not Checked In
+          </div>
+          <button onclick="scanBadge('ATT_002')" id="btn-ATT_002">
+            Simulate Scan
+          </button>
+        </div>
+
+        <div class="card" id="card-ATT_003">
+          <h3>Charlie Davis</h3>
+          <p class="id-tag">ID: ATT_003</p>
+          <div class="status-badge status-not_checked_in" id="badge-ATT_003">
+            Not Checked In
+          </div>
+          <button onclick="scanBadge('ATT_003')" id="btn-ATT_003">
+            Simulate Scan
+          </button>
+        </div>
+      </main>
+
+      <section class="logs-container">
+        <h3>Activity Log</h3>
+        <div id="log-list" class="log-list">
+          <div class="log-entry">
+            System ready. Select an attendee to simulate scanning...
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

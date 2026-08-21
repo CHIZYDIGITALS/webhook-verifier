@@ -75,6 +75,6 @@
 
 ## Summary of Autonomous Learning
 
-- **Total Time Spent:** ~3.5 Hours
+- **Total Time Spent:** 12 Hours
 - **Primary Documentation Used:** Python `hmac`, `hashlib`, `urllib.request` documentation, Flask request processing guide, and asynchronous threading patterns.
 - **Key Takeaway:** Pivoting from synchronous API calls to an asynchronous, event-driven model requires decoupling status tracking (using `Pending` states) and validating background callbacks via signature verification to prevent duplicate requests[span_7](start_span)[span_7](end_span).
