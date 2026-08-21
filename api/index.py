@@ -49,8 +49,8 @@ async def process_print_queue(attendee_id: str, callback_url: str):
 async def get_attendees():
     return attendees
 
-@app.post("/api/scan")
-async def handle_scan(request_data: ScanRequest, http_request: Request, background_tasks: BackgroundTasks):
+# Shared handler for both /api/scan and /api/checkin
+async def process_scan(request_data: ScanRequest, http_request: Request, background_tasks: BackgroundTasks):
     attendee_id = request_data.attendee_id
     current_status = attendees.get(attendee_id, "not_checked_in")
     
@@ -69,6 +69,14 @@ async def handle_scan(request_data: ScanRequest, http_request: Request, backgrou
     
     background_tasks.add_task(process_print_queue, attendee_id, callback_url)
     return {"status": "pending", "message": "Print job queued. Awaiting webhook confirmation."}
+
+@app.post("/api/scan")
+async def handle_scan(request_data: ScanRequest, http_request: Request, background_tasks: BackgroundTasks):
+    return await process_scan(request_data, http_request, background_tasks)
+
+@app.post("/api/checkin")
+async def handle_checkin(request_data: ScanRequest, http_request: Request, background_tasks: BackgroundTasks):
+    return await process_scan(request_data, http_request, background_tasks)
 
 @app.post("/api/webhook")
 async def handle_webhook(data: dict):
