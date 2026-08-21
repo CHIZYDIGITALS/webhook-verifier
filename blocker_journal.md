@@ -64,6 +64,13 @@
 - **Webhook Callback (`200 OK`):** Background worker signs payload with HMAC-SHA256 and calls `/webhook/print-complete` to update state to `Checked In`[span_5](start_span)[span_5](end_span).
 - **Duplicate Protection (`400 Bad Request`):** Re-scanning `pending` or `checked_in` attendees blocks second print job creation[span_6](start_span)[span_6](end_span).
 
+## Entry: Frontend Kiosk Integration & CORS Resolution
+
+- **Challenge:** Needed to create an interactive frontend UI for simulating badge scans without modifying existing backend logic or adding external CORS dependencies (`flask-cors`).
+- **Root Cause:** Opening `index.html` directly via the file system (`file://`) or a separate dev server port triggered browser cross-origin policy errors against the Flask API running on port 5000.
+- **Solution:** Moved `index.html`, `styles.css`, and `script.js` into Flask's default `static/` directory. Serving the frontend directly from `http://127.0.0.1:5000/static/index.html` allowed zero-CORS intra-origin requests to `/api/checkin` and `/api/attendees` while keeping `app.py` 100% untouched.
+- **Outcome:** Interactive UI functioning with live 1-second state polling, error banner popups for duplicate scan blocks, and automatic visual state transitions (`Not Checked In` → `Pending` → `Checked In`).
+
 ---
 
 ## Summary of Autonomous Learning
