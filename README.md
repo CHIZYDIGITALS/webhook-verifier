@@ -1,5 +1,6 @@
 # Webhook Verification & Async Badge Kiosk System
 
+![Badge Kiosk UI](kiosk_preview.png)
 An event-driven Flask microservice built for Solstice Events Co. to handle asynchronous badge printing with HMAC-SHA256 webhook security, pending UI state handling, and duplicate scan protection[span_1](start_span)[span_1](end_span).
 
 ## Architectural Pivot Overview (Day 4)
