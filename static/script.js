@@ -40,7 +40,7 @@ async function scanBadge(attendeeId) {
   logActivity(`Initiating scan for ${attendeeId}...`);
 
   try {
-    const response = await fetch("/api/checkin", {
+    const response = await fetch("/api/scan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ attendee_id: attendeeId }),

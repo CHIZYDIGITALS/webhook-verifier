@@ -1,10 +1,8 @@
 import os
 import asyncio
-from typing import Optional
 from fastapi import FastAPI, BackgroundTasks, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
-from pydantic import BaseModel
 import hmac
 import hashlib
 import requests
@@ -21,11 +19,8 @@ SECRET_KEY = "solstice_secret_key"
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-
-class ScanRequest(BaseModel):
-    attendee_id: str
-    callback_url: Optional[str] = None
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 async def process_print_queue(attendee_id: str, callback_url: str):
     await asyncio.sleep(3)
@@ -42,7 +37,7 @@ async def process_print_queue(attendee_id: str, callback_url: str):
                 timeout=5
             )
         except Exception as e:
-            print(f"Webhook delivery failed: {e}")
+            print(f"Webhook error: {e}")
 
 @app.get("/api/attendees")
 async def get_attendees():
@@ -58,8 +53,18 @@ async def reset_attendees():
     }
     return {"status": "reset", "attendees": attendees}
 
-async def process_scan(request_data: ScanRequest, http_request: Request, background_tasks: BackgroundTasks):
-    attendee_id = request_data.attendee_id
+async def process_scan(http_request: Request, background_tasks: BackgroundTasks):
+    try:
+        body = await http_request.json()
+    except Exception:
+        body = {}
+
+    attendee_id = body.get("attendee_id") or body.get("attendeeId") or body.get("id")
+    callback_url = body.get("callback_url") or body.get("callbackUrl")
+
+    if not attendee_id:
+        return JSONResponse(status_code=400, content={"status": "error", "message": "Missing attendee_id in request body"})
+
     current_status = attendees.get(attendee_id, "not_checked_in")
     
     if current_status in ["pending", "checked_in"]:
@@ -74,21 +79,20 @@ async def process_scan(request_data: ScanRequest, http_request: Request, backgro
 
     attendees[attendee_id] = "pending"
     
-    callback_url = request_data.callback_url
     if not callback_url or not callback_url.startswith("http"):
         base_url = str(http_request.base_url).rstrip("/")
         callback_url = f"{base_url}/api/webhook"
     
     background_tasks.add_task(process_print_queue, attendee_id, callback_url)
-    return {"status": "pending", "message": "Print job queued. Awaiting webhook confirmation."}
+    return {"status": "pending", "message": f"Scan initiated for {attendee_id}. Badge printing..."}
 
 @app.post("/api/scan")
-async def handle_scan(request_data: ScanRequest, http_request: Request, background_tasks: BackgroundTasks):
-    return await process_scan(request_data, http_request, background_tasks)
+async def handle_scan(http_request: Request, background_tasks: BackgroundTasks):
+    return await process_scan(http_request, background_tasks)
 
 @app.post("/api/checkin")
-async def handle_checkin(request_data: ScanRequest, http_request: Request, background_tasks: BackgroundTasks):
-    return await process_scan(request_data, http_request, background_tasks)
+async def handle_checkin(http_request: Request, background_tasks: BackgroundTasks):
+    return await process_scan(http_request, background_tasks)
 
 @app.post("/api/webhook")
 async def handle_webhook(data: dict):
@@ -100,4 +104,7 @@ async def handle_webhook(data: dict):
 
 @app.get("/")
 async def read_index():
-    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return JSONResponse(content={"status": "API online"})
