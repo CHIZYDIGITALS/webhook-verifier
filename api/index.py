@@ -40,10 +40,12 @@ async def process_print_queue(attendee_id: str, callback_url: str):
             print(f"Webhook error: {e}")
 
 @app.get("/api/attendees")
+@app.get("/attendees")
 async def get_attendees():
     return attendees
 
 @app.get("/api/reset")
+@app.get("/reset")
 async def reset_attendees():
     global attendees
     attendees = {
@@ -87,14 +89,17 @@ async def process_scan(http_request: Request, background_tasks: BackgroundTasks)
     return {"status": "pending", "message": f"Scan initiated for {attendee_id}. Badge printing..."}
 
 @app.post("/api/scan")
+@app.post("/scan")
 async def handle_scan(http_request: Request, background_tasks: BackgroundTasks):
     return await process_scan(http_request, background_tasks)
 
 @app.post("/api/checkin")
+@app.post("/checkin")
 async def handle_checkin(http_request: Request, background_tasks: BackgroundTasks):
     return await process_scan(http_request, background_tasks)
 
 @app.post("/api/webhook")
+@app.post("/webhook")
 async def handle_webhook(data: dict):
     attendee_id = data.get("attendee_id")
     status = data.get("status")
