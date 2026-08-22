@@ -1,9 +1,9 @@
 import os
 import asyncio
 from typing import Optional
-from fastapi import FastAPI, BackgroundTasks, HTTPException, Request
+from fastapi import FastAPI, BackgroundTasks, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 import hmac
 import hashlib
@@ -11,7 +11,6 @@ import requests
 
 app = FastAPI()
 
-# Initial attendee state
 attendees = {
     "ATT_001": "not_checked_in",
     "ATT_002": "not_checked_in",
@@ -49,15 +48,28 @@ async def process_print_queue(attendee_id: str, callback_url: str):
 async def get_attendees():
     return attendees
 
-# Shared handler for both /api/scan and /api/checkin
+@app.get("/api/reset")
+async def reset_attendees():
+    global attendees
+    attendees = {
+        "ATT_001": "not_checked_in",
+        "ATT_002": "not_checked_in",
+        "ATT_003": "not_checked_in"
+    }
+    return {"status": "reset", "attendees": attendees}
+
 async def process_scan(request_data: ScanRequest, http_request: Request, background_tasks: BackgroundTasks):
     attendee_id = request_data.attendee_id
     current_status = attendees.get(attendee_id, "not_checked_in")
     
     if current_status in ["pending", "checked_in"]:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Scan blocked: Attendee {attendee_id} is already {current_status}."
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "blocked", 
+                "detail": f"Scan blocked: Attendee {attendee_id} is already {current_status}.",
+                "message": f"Scan blocked: Attendee {attendee_id} is already {current_status}."
+            }
         )
 
     attendees[attendee_id] = "pending"

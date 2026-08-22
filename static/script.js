@@ -1,61 +1,43 @@
-let pollInterval = null;
+document.addEventListener("DOMContentLoaded", () => {
+  fetchAttendees();
+  setInterval(fetchAttendees, 1000);
+});
 
-// Helper to append log messages
-function log(message) {
-  const logList = document.getElementById("log-list");
-  const timestamp = new Date().toLocaleTimeString();
-  const entry = document.createElement("div");
-  entry.className = "log-entry";
-  entry.textContent = `[${timestamp}] ${message}`;
-  logList.prepend(entry);
-}
-
-// Display error alert banner
-function showAlert(message) {
-  const banner = document.getElementById("alert-banner");
-  banner.textContent = message;
-  banner.className = "alert-banner error";
-  setTimeout(() => {
-    banner.className = "alert-banner hidden";
-  }, 4000);
-}
-
-// Fetch current attendee states from server
-async function updateAttendeeStates() {
+async function fetchAttendees() {
   try {
     const response = await fetch("/api/attendees");
     if (!response.ok) return;
-
     const attendees = await response.json();
-
-    for (const [id, data] of Object.entries(attendees)) {
-      const badge = document.getElementById(`badge-${id}`);
-      const btn = document.getElementById(`btn-${id}`);
-
-      if (badge && btn) {
-        if (data.status === "not_checked_in") {
-          badge.textContent = "Not Checked In";
-          badge.className = "status-badge status-not_checked_in";
-          btn.disabled = false;
-        } else if (data.status === "pending") {
-          badge.textContent = "Printing Badge...";
-          badge.className = "status-badge status-pending";
-          btn.disabled = true;
-        } else if (data.status === "checked_in") {
-          badge.textContent = "Checked In";
-          badge.className = "status-badge status-checked_in";
-          btn.disabled = true;
-        }
-      }
-    }
+    updateUI(attendees);
   } catch (e) {
-    console.error("Failed to fetch attendees", e);
+    console.error("Polling error:", e);
   }
 }
 
-// Trigger scan request
-async function scanBadge(attendeeId) {
-  log(`Initiating scan for ${attendeeId}...`);
+function updateUI(attendees) {
+  Object.keys(attendees).forEach((id) => {
+    const card = document.querySelector(`[data-id="${id}"]`);
+    if (!card) return;
+
+    const statusBadge = card.querySelector(".status-badge");
+    const status = attendees[id];
+
+    if (statusBadge) {
+      statusBadge.textContent = formatStatus(status);
+      statusBadge.className = `status-badge ${status}`;
+    }
+  });
+}
+
+function formatStatus(status) {
+  if (status === "not_checked_in") return "Not Checked In";
+  if (status === "pending") return "Pending...";
+  if (status === "checked_in") return "Checked In";
+  return status;
+}
+
+async function simulateScan(attendeeId) {
+  logActivity(`Initiating scan for ${attendeeId}...`);
 
   try {
     const response = await fetch("/api/checkin", {
@@ -66,22 +48,38 @@ async function scanBadge(attendeeId) {
 
     const data = await response.json();
 
-    if (response.status === 202) {
-      log(
-        `Success: Print job queued for ${attendeeId} (Status set to Pending).`,
-      );
-      updateAttendeeStates();
-    } else if (response.status === 400) {
-      log(`BLOCKED: ${data.message}`);
-      showAlert(data.message);
-    } else {
-      showAlert(data.error || "An error occurred.");
+    if (!response.ok) {
+      const errorMsg = data.detail || data.message || "Scan blocked";
+      logActivity(`BLOCKED: ${errorMsg}`);
+      showNotification(errorMsg, "error");
+      return;
     }
-  } catch (e) {
-    log(`Error communicating with backend server.`);
+
+    logActivity(`Scan queued for ${attendeeId}. Printing badge...`);
+    showNotification(`Scan initiated for ${attendeeId}`, "success");
+    fetchAttendees();
+  } catch (error) {
+    logActivity(`ERROR: ${error.message}`);
+    showNotification("An error occurred during scan.", "error");
   }
 }
 
-// Automatically refresh status every 1 second to capture background webhook updates
-pollInterval = setInterval(updateAttendeeStates, 1000);
-updateAttendeeStates();
+function logActivity(message) {
+  const log = document.getElementById("activity-log");
+  if (!log) return;
+  const time = new Date().toLocaleTimeString();
+  const entry = document.createElement("p");
+  entry.textContent = `[${time}] ${message}`;
+  log.prepend(entry);
+}
+
+function showNotification(message, type) {
+  const alertBox = document.getElementById("notification");
+  if (!alertBox) return;
+  alertBox.textContent = message;
+  alertBox.className = `notification ${type}`;
+  alertBox.style.display = "block";
+  setTimeout(() => {
+    alertBox.style.display = "none";
+  }, 4000);
+}
