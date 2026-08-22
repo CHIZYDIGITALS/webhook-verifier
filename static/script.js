@@ -36,7 +36,7 @@ function formatStatus(status) {
   return status;
 }
 
-async function simulateScan(attendeeId) {
+async function scanBadge(attendeeId) {
   logActivity(`Initiating scan for ${attendeeId}...`);
 
   try {
